@@ -1,0 +1,4 @@
+Exp,Value,StatData,StatSim,DetMod,PU,SigMod,PDF,Multijet,Wjets,SpecPhysMod,GenMod
+ATLAS,0.006,0.010,0.002,0.004,0.002,0,0.001,0,0.002,0,0
+CMS,0.004,0.010,0.002,0.007,0,0.002,0.002,0.001,0.004,0,0.007
+Corr,0,0,0,0,0,0.5,1,0,0.5,0,0
