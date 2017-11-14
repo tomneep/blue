@@ -2,13 +2,13 @@
 TODO:
     - Compatibiltiy
     - Parameters
-    - Pulls
 """
 
 import numpy as np
 
 
 class Blue(object):
+    """The Blue class"""
 
     def __init__(self, data, correlations, results_column=None,
                  observables=None):
@@ -21,10 +21,14 @@ class Blue(object):
     def _get_results_col(self):
         no_corr_columns = self.data.columns ^ self.correlations
         if len(no_corr_columns) != 1:
-            raise IndexError('Results column can not be infered!')
+            raise IndexError('Results column can not be inferred!')
         return no_corr_columns[0]
 
     def _run_calculation(self):
+        """Run the actual BLUE calculation to find the weights.
+        Also returns the calculated covariance matrices i.e.
+        cov(i, j) = sigma_i * sigma_j * corr(i, j)
+        """
         covariance_matrices = {}
         for i in self.data.drop(self.results_column, axis=1).columns:
             x = np.array(self.data[i].values, ndmin=2)
@@ -58,6 +62,7 @@ class Blue(object):
 
     @property
     def weights(self):
+        """The BLUE weights"""
         w, _ = self._run_calculation()
         return w
 
@@ -74,7 +79,8 @@ class Blue(object):
 
     @property
     def intrinsic_information_weights(self):
-        """See arXiv:1307.4003"""
+        """Intrinsic information weights.
+        See `arXiv:1307.4003 <https://arxiv.org/abs/1307.4003>`_"""
         cov = self.total_covariance
         I = self._fisher_information
 
@@ -82,7 +88,9 @@ class Blue(object):
 
     @property
     def marginal_information_weights(self):
-        """See arXiv:1307.4003"""
+        """Marginal information weights.
+        See `arXiv:1307.4003 <https://arxiv.org/abs/1307.4003>`_
+        """
         I = self._fisher_information
 
         marginal_weights = [
@@ -94,6 +102,9 @@ class Blue(object):
 
     @property
     def combined_result(self):
+        """The combined result. A single number if only a single observable, a
+        dictionary of observables and results if more than one observable.
+        """
         w = self.weights
         if w.ndim == 1:
             return (self.data[self.results_column] * w).sum()
@@ -102,16 +113,40 @@ class Blue(object):
 
     @property
     def combined_uncertainties(self):
+        """The uncertainties on the combined result(s)"""
         w, covs = self._run_calculation()
-        return {i: np.sqrt(w.T @ j @ w) for i, j in covs.items()}
+        uncerts = {}
+        for i, j in covs.items():
+            weighted_cov = w.T @ j @ w
+            if weighted_cov.ndim:
+                weighted_cov = weighted_cov.diagonal()
+            uncerts[i] = np.sqrt(weighted_cov)
+        return uncerts
+
+    @property
+    def pulls(self):
+        """Get the pulls
+        """
+        if self.observables is not None:
+            raise NotImplementedError(
+                'Pulls only valid for a single observable'
+            )
+        comb_res = self.combined_result
+        comb_uncert = np.sqrt(1 / self._fisher_information)
+        diff_result = self.data[self.results_column] - self.combined_result
+        diff_variance = np.sqrt(self.total_covariance.diagonal()
+                                - (1 / self._fisher_information))
+        return diff_result / diff_variance
 
     @property
     def total_covariance(self):
+        """The total covariance matrix"""
         _, covs = self._run_calculation()
         return np.stack(covs.values()).sum(axis=0)
 
     @property
     def total_correlations(self):
+        """The total correlation matrix"""
         total_covariance = self.total_covariance
         sigmas = np.sqrt(np.diagonal(total_covariance)).reshape(-1, 1)
         return total_covariance / (sigmas * sigmas.T)
@@ -149,6 +184,10 @@ class Blue(object):
     @classmethod
     def iterative(cls, data, correlations, results_column=None,
                   fixed=None, cutoff=0.01, max_iters=200):
+        """Construct an instance of the Blue class iteratively, updating uncertainties
+        based on the combined result and repeating the combination until the
+        change between successive iterations is less that cutoff * 100 %.
+        """
         it_data = data.copy()
         prev_result = None
 
