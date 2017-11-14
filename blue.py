@@ -2,7 +2,6 @@
 TODO:
     - Compatibiltiy
     - Parameters
-    - Information weights
     - Pulls
 """
 
@@ -63,28 +62,33 @@ class Blue(object):
         return w
 
     @property
+    def _fisher_information(self):
+        if self.observables is not None:
+            raise NotImplementedError(
+                'Information weights are only available '
+                'for a single observable'
+            )
+        cov = self.total_covariance
+        u = np.ones(cov.shape[0])
+        return u.T @ np.linalg.inv(cov) @ u
+
+    @property
     def intrinsic_information_weights(self):
         """See arXiv:1307.4003"""
         cov = self.total_covariance
-        u = np.ones(cov.shape[0])
-        I = (u.T @ np.linalg.inv(cov) @ u)
+        I = self._fisher_information
 
         return 1 / I / cov.diagonal()
 
     @property
     def marginal_information_weights(self):
         """See arXiv:1307.4003"""
-        cov = self.total_covariance
-        u = np.ones(cov.shape[0])
-        I = (u.T @ np.linalg.inv(cov) @ u)
+        I = self._fisher_information
 
-        marginal_weights = []
-        for i in self.data.index:
-            tmp_b = self.__getitem__(self.data.index.drop(i))
-            tmp_cov = tmp_b.total_covariance
-            tmp_u = np.ones(tmp_cov.shape[0])
-            tmp_I = tmp_u.T @ np.linalg.inv(tmp_cov) @ tmp_u
-            marginal_weights.append((I - tmp_I)/I)
+        marginal_weights = [
+            (I - self[self.data.index.drop(i)]._fisher_information) / I
+            for i in self.data.index
+        ]
 
         return np.array(marginal_weights)
 
@@ -151,10 +155,8 @@ class Blue(object):
         for _ in range(max_iters):
             blue = cls(it_data, correlations, results_column=results_column)
             result = blue.combined_result
-            if prev_result is not None:
-                diff = abs(1 - result / prev_result)
-                if diff < cutoff:
-                    break
+            if prev_result and abs(1 - result / prev_result) < cutoff:
+                break
             prev_result = result
             new_uncerts = (
                 (data.drop(blue.results_column, axis=1).T
