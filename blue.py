@@ -1,14 +1,28 @@
 """
-TODO:
-    - Compatibiltiy
-    - Parameters
+.. todo::
+
+    Compatibility, Parameters
 """
 
 import numpy as np
 
 
 class Blue(object):
-    """The Blue class"""
+    """The Blue class
+
+    :param data: A pandas dataframe containing the results and uncertainties
+         per experiment. The data should be organised in a "tidy" format with
+         one row per measurement. All uncertainties should be given as
+         absolute uncertainties.
+    :param correlations: A mapping of uncertainty
+         names to correlations. Correlations can be either single numbers, in
+         which case an appropriately shaped correlation matrix filled with that
+         value will be created (with all diagonal elements set to one), or a
+         two-dimensional numpy array.
+    :param results_column: The column in data containing the measured values.
+    :param observables: None or a dictionary mapping observables to
+         measurements. For a single observable leave as (or set to) None.
+    """
 
     def __init__(self, data, correlations, results_column=None,
                  observables=None):
@@ -80,7 +94,22 @@ class Blue(object):
     @property
     def intrinsic_information_weights(self):
         """Intrinsic information weights.
-        See `arXiv:1307.4003 <https://arxiv.org/abs/1307.4003>`_"""
+
+        This is only available for a single observable.
+        The intrinsic information weight for a measurement :math:`i` is
+
+        .. math::
+            IIW_i = \\frac{\\sigma^2_Y}{\\sigma^2_i}
+
+        where :math:`\\sigma^2_Y` is the BLUE variance.
+        See `arXiv:1307.4003 <https://arxiv.org/abs/1307.4003>`_
+        for more information.
+
+        .. note::
+            The intrinsic information weights are returned for
+            each input measurement. The weight attributed to correlations
+            is :math:`1 - \\sum_i IIW_i`.
+        """
         cov = self.total_covariance
         I = self._fisher_information
 
@@ -89,7 +118,19 @@ class Blue(object):
     @property
     def marginal_information_weights(self):
         """Marginal information weights.
-        See `arXiv:1307.4003 <https://arxiv.org/abs/1307.4003>`_
+
+        This is only available for a single observable.
+        The marginal information weight for a measurement :math:`i` is
+
+        .. math::
+            MIW_i = 1 - \\frac{\\sigma^2_Y}{\\sigma^2_{Y-i}}
+
+        where :math:`\\sigma^2_Y` is the BLUE variance when including all
+        measurements in the combination and :math:`\\sigma^2_{Y-i}` is the BLUE
+        variance when including all measurements in the combination **except**
+        measurement :math:`i`. See `arXiv:1307.4003
+        <https://arxiv.org/abs/1307.4003>`_
+
         """
         I = self._fisher_information
 
@@ -125,8 +166,7 @@ class Blue(object):
 
     @property
     def pulls(self):
-        """Get the pulls
-        """
+        """Get the pulls"""
         if self.observables is not None:
             raise NotImplementedError(
                 'Pulls only valid for a single observable'
@@ -140,7 +180,12 @@ class Blue(object):
 
     @property
     def total_covariance(self):
-        """The total covariance matrix"""
+        """The total covariance matrix. This is constructed from the input data and
+        correlations passed into the class constructor. For each source of
+        uncertainty, a covariance matrix is constructed such that :math:`Cov(i,
+        j) = \\sigma_i \\sigma_j \\rho_{ij}`. The total covariance is then
+        obtained by adding all the covariance matrices element wise.
+        """
         _, covs = self._run_calculation()
         return np.stack(covs.values()).sum(axis=0)
 
@@ -153,6 +198,15 @@ class Blue(object):
 
     @property
     def chi2_ndf(self):
+        """The :math:`\\chi^2` and number-of-degrees-of-freedom (NDF) of the
+        combination. One can obtain the p-value of the combination using
+        scipy::
+
+            from scipy.stats import chi2
+
+            blue = Blue(data, correlations)
+            p_value = chi2.sf(*blue.chi2_ndf)
+        """
         combined_result = self.combined_result
         total_covariance = self.total_covariance
         diff = self.data[self.results_column].values - combined_result
@@ -160,6 +214,17 @@ class Blue(object):
         return diff.T @ np.linalg.inv(total_covariance) @ diff, ndf
 
     def __getitem__(self, item):
+        """Make a new instance of the :py:class:`Blue` class using only a
+        subset of
+        measurements. This makes it easy to perform a combination using a
+        subset of all the measurements without having to redefine correlation
+        matrices.
+
+        :param list item: A list of measurements
+        :return: A new instance of the :py:class:`Blue` class
+            using a subset of measurements as defined by `item`.
+
+        """
         num_loc = [self.data.index.get_loc(i) for i in item]
         sub_df = self.data.loc[item]
 
@@ -186,7 +251,19 @@ class Blue(object):
                   fixed=None, cutoff=0.01, max_iters=200):
         """Construct an instance of the Blue class iteratively, updating uncertainties
         based on the combined result and repeating the combination until the
-        change between successive iterations is less that cutoff * 100 %.
+        change between successive iterations is less that cutoff * 100 %. The first
+        three parameters of this method are the same as those used to initialise
+        the standard :py:class:`Blue` class.
+
+        :param data: See :py:class:`Blue`
+        :param correlations: See :py:class:`Blue`
+        :param results_column: See :py:class:`Blue`
+        :param fixed: Uncertainty names that should not be scaled when
+             applying the iterative procedure.
+             These are typically statistical uncertainties.
+        :param cutoff: The point at which to stop iterating and return.
+        :param max_iters: When to stop iterating and give up.
+        :raises RuntimeError: if `max_iters` is reached.
         """
         it_data = data.copy()
         prev_result = None
