@@ -3,7 +3,7 @@
 
     Compatibility, Parameters
 """
-
+from collections import namedtuple
 import numpy as np
 
 
@@ -23,6 +23,9 @@ class Blue(object):
     :param observables: None or a dictionary mapping observables to
          measurements. For a single observable leave as (or set to) None.
     """
+    _BlueResult = namedtuple(
+        'BlueResult', ['weights', 'covariance_matrices', 'combined_covariance']
+    )
 
     def __init__(self, data, correlations, results_column=None,
                  observables=None):
@@ -51,34 +54,34 @@ class Blue(object):
 
         total_inv_covariance = np.linalg.inv(total_covariance)
 
-        if self.observables is None:
-            u = np.ones(total_inv_covariance.shape[0])
+        u = self._u_array(total_covariance.shape[0])
+
+        combined_covariance = np.atleast_2d(u.T @ total_inv_covariance @ u)
+        combined_covariance = np.linalg.inv(combined_covariance)
+
+        w = (total_inv_covariance @ u)[:, np.newaxis] @ combined_covariance
+
+        return self._BlueResult(
+            weights=w.squeeze(),
+            covariance_matrices=covariance_matrices,
+            combined_covariance=combined_covariance,
+        )
+
+    def _u_array(self, n_measurements):
+        n_obs = 1 if self.observables is None else len(self.observables)
+        if n_obs > 1:
+            u = np.zeros((n_measurements, n_obs))
+            for i, measurements in enumerate(self.observables.values()):
+                num_loc = [self.data.index.get_loc(j) for j in measurements]
+                u[num_loc, i] = 1
         else:
-            u = self._get_u_array(total_inv_covariance.shape[0])
-
-        covariance_result = u.T @ total_inv_covariance @ u
-
-        if self.observables is None:
-            w = (total_inv_covariance @ u) / covariance_result
-        else:
-            covariance_result = np.linalg.inv(covariance_result)
-            w = (total_inv_covariance @ u) @ covariance_result
-
-        return w, covariance_matrices
-
-    def _get_u_array(self, n_measurements):
-        n_obs = len(self.observables)
-        u = np.zeros((n_measurements, n_obs))
-        for i, measurements in enumerate(self.observables.values()):
-            num_loc = [self.data.index.get_loc(j) for j in measurements]
-            u[num_loc, i] = 1
+            u = np.ones(n_measurements)
         return u
 
     @property
     def weights(self):
         """The BLUE weights"""
-        w, _ = self._run_calculation()
-        return w
+        return self._run_calculation().weights
 
     @property
     def _fisher_information(self):
@@ -87,9 +90,7 @@ class Blue(object):
                 'Information weights are only available '
                 'for a single observable'
             )
-        cov = self.total_covariance
-        u = np.ones(cov.shape[0])
-        return u.T @ np.linalg.inv(cov) @ u
+        return 1 / self._run_calculation().combined_covariance.squeeze()
 
     @property
     def intrinsic_information_weights(self):
@@ -155,7 +156,8 @@ class Blue(object):
     @property
     def combined_uncertainties(self):
         """The uncertainties on the combined result(s)"""
-        w, covs = self._run_calculation()
+        result = self._run_calculation()
+        w, covs = result.weights, result.covariance_matrices
         uncerts = {}
         for i, j in covs.items():
             weighted_cov = w.T @ j @ w
@@ -171,8 +173,6 @@ class Blue(object):
             raise NotImplementedError(
                 'Pulls only valid for a single observable'
             )
-        comb_res = self.combined_result
-        comb_uncert = np.sqrt(1 / self._fisher_information)
         diff_result = self.data[self.results_column] - self.combined_result
         diff_variance = np.sqrt(self.total_covariance.diagonal()
                                 - (1 / self._fisher_information))
@@ -186,7 +186,7 @@ class Blue(object):
         j) = \\sigma_i \\sigma_j \\rho_{ij}`. The total covariance is then
         obtained by adding all the covariance matrices element wise.
         """
-        _, covs = self._run_calculation()
+        covs = self._run_calculation().covariance_matrices
         return np.stack(covs.values()).sum(axis=0)
 
     @property
@@ -197,7 +197,18 @@ class Blue(object):
         return total_covariance / (sigmas * sigmas.T)
 
     @property
+    def observable_correlations(self):
+        """The correlation between multiple observables. This property is only really
+        useful when performing the blue combination with multiple observables
+        as the correlation with an observable with itself is just one.
+        """
+        comb_cov = self._run_calculation().combined_covariance
+        diag = np.atleast_2d(comb_cov.diagonal())
+        return comb_cov / np.sqrt(diag * diag.T)
+
+    @property
     def chi2_ndf(self):
+
         """The :math:`\\chi^2` and number-of-degrees-of-freedom (NDF) of the
         combination. One can obtain the p-value of the combination using
         scipy::
