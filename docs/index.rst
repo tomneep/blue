@@ -2,7 +2,14 @@ Blue: Python implementation of BLUE - Best Linear Unbiased Estimator
 ====================================================================
 
 Blue exists as a single python file, containing a single class,
-:py:class:`Blue`. Using blue to get a combined result is straight-forward, the
+:py:class:`Blue`. :py:class:`Blue` uses the power of :py:mod:`pandas` and
+:py:mod:`numpy` leading to a relatively simple implementation.
+:py:mod:`blue` requires Python 3.6 due its use of two particularly delicious
+language features: the matrix multiplication operator `@` and f-strings.
+:py:mod:`blue` doesn't use f-strings extensively and so could be made to work
+with Python 3.5, but hey, why use 3.5 when you can use 3.6!
+
+Using :py:mod:`blue` to get a combined result is straight-forward, the
 difficult part is making you measurements and assigning correlations between the
 uncertainties of those measurements. Once this has been achieved one can
 construct an instance of the :py:class:`Blue` class to find the combined result
@@ -16,6 +23,7 @@ documented below but :py:mod:`blue` is best demonstrated by example.
    notebooks/ATLAS-CONF-2013-098
    notebooks/ATLAS-CONF-2014-054
    notebooks/arxiv_1709.05327
+   notebooks/ATLAS-CONF-2013-102
 
 .. todo::
    Add notebooks for more combinations
