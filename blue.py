@@ -1,7 +1,5 @@
 """
-.. todo::
-
-    Compatibility, Parameters
+BLUE: Best Linear Unbiased Estimator
 """
 from collections import namedtuple
 import numpy as np
@@ -202,6 +200,10 @@ class Blue(object):
 
     @property
     def combined_covariance(self):
+        """The covariance matrix of the combination. In the case of a single observable
+        this will just be a single number but is always returned as a
+        two-dimensional numpy array.
+        """
         return self._run_calculation().combined_covariance
 
     @property
@@ -216,7 +218,6 @@ class Blue(object):
 
     @property
     def chi2_ndf(self):
-
         """The :math:`\\chi^2` and number-of-degrees-of-freedom (NDF) of the
         combination. One can obtain the p-value of the combination using
         scipy::
