@@ -19,20 +19,24 @@ class Blue(object):
          which case an appropriately shaped correlation matrix filled with that
          value will be created (with all diagonal elements set to one), or a
          two-dimensional numpy array.
-    :param results_column: The column in data containing the measured values.
     :param observables: None or a dictionary mapping observables to
          measurements. For a single observable leave as (or set to) None.
+    :raises IndexError: The results column will be
+         automatically inferred as
+         the only column in the data that is not in the `correlations` mapping.
+         If this can not be inferred e.g. because the number of keys in the
+         mapping is not equal to the number of columns in the data minus one
+         an IndexError will be raised.
     """
     _BlueResult = namedtuple(
         'BlueResult', ['weights', 'covariance_matrices', 'combined_covariance']
     )
 
-    def __init__(self, data, correlations, results_column=None,
-                 observables=None):
+    def __init__(self, data, correlations, observables=None):
         self.data = data
         self.correlations = {i: self._to_array(j)
                              for i, j in correlations.items()}
-        self.results_column = results_column or self._get_results_col()
+        self.results_column = self._get_results_col()
         self.observables = observables
 
     def _get_results_col(self):
@@ -262,8 +266,8 @@ class Blue(object):
         return out
 
     @classmethod
-    def iterative(cls, data, correlations, results_column=None,
-                  fixed=None, cutoff=0.01, max_iters=200):
+    def iterative(cls, data, correlations, fixed=None, cutoff=0.01,
+                  max_iters=200):
         """Construct an instance of the Blue class iteratively, updating uncertainties
         based on the combined result and repeating the combination until the
         change between successive iterations is less that cutoff * 100 %. The first
@@ -272,7 +276,6 @@ class Blue(object):
 
         :param data: See :py:class:`Blue`
         :param correlations: See :py:class:`Blue`
-        :param results_column: See :py:class:`Blue`
         :param fixed: Uncertainty names that should not be scaled when
              applying the iterative procedure.
              These are typically statistical uncertainties.
@@ -284,7 +287,7 @@ class Blue(object):
         prev_result = None
 
         for _ in range(max_iters):
-            blue = cls(it_data, correlations, results_column=results_column)
+            blue = cls(it_data, correlations)
             result = blue.combined_result
             if prev_result and abs(1 - result / prev_result) < cutoff:
                 break
