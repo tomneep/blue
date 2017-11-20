@@ -261,7 +261,7 @@ class Blue(object):
             out = np.full(out_shape, out)
             np.fill_diagonal(out, 1.0)
         if out.shape != out_shape:
-            raise IndexError(
+            raise ValueError(
                 'Correlation matrix is not the correct shape. '
                 f'(should be {out_shape}, is {out.shape})')
         return out
