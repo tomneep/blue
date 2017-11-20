@@ -197,6 +197,10 @@ class Blue(object):
         return total_covariance / (sigmas * sigmas.T)
 
     @property
+    def combined_covariance(self):
+        return self._run_calculation().combined_covariance
+
+    @property
     def observable_correlations(self):
         """The correlation between multiple observables. This property is only really
         useful when performing the blue combination with multiple observables
