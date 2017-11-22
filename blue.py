@@ -251,7 +251,7 @@ class Blue(object):
         new_correlations = {i: j[num_loc, :][:, num_loc]
                             for i, j in self.correlations.items()}
 
-        return Blue(sub_df, new_correlations, self.results_column)
+        return Blue(sub_df, new_correlations)
 
     def _to_array(self, in_array):
         out = np.array(in_array)
