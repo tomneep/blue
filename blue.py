@@ -271,9 +271,9 @@ class Blue(object):
                   max_iters=200):
         """Construct an instance of the Blue class iteratively, updating uncertainties
         based on the combined result and repeating the combination until the
-        change between successive iterations is less that cutoff * 100 %. The first
-        three parameters of this method are the same as those used to initialise
-        the standard :py:class:`Blue` class.
+        change between successive iterations is less that cutoff * 100 %. The
+        first two parameters of this method are the same as those used to
+        initialise the standard :py:class:`Blue` class.
 
         :param data: See :py:class:`Blue`
         :param correlations: See :py:class:`Blue`
@@ -283,6 +283,7 @@ class Blue(object):
         :param cutoff: The point at which to stop iterating and return.
         :param max_iters: When to stop iterating and give up.
         :raises RuntimeError: if `max_iters` is reached.
+
         """
         it_data = data.copy()
         prev_result = None
