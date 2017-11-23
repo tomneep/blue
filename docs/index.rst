@@ -55,6 +55,8 @@ The Blue class
    .. autoattribute:: total_covariance
    .. autoattribute:: total_correlations
 
+   .. autoattribute:: observable_correlations
+
    The consistency of the combination can be tested using:
 
    .. autoattribute:: chi2_ndf

@@ -296,7 +296,7 @@ class Blue(object):
             prev_result = result
             new_uncerts = (
                 (data.drop(blue.results_column, axis=1).T
-                 / it_data.Value.values) * result
+                 / it_data[blue.results_column].values) * result
             ).T
             if fixed is not None:
                 new_uncerts = new_uncerts.drop(fixed, axis=1)
