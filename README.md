@@ -10,6 +10,6 @@ notebooks.
 ## Examples
 
 Previous analyses that have used the BLUE method (but not this code) are
-reproduced the docs. You can interact with these using binder: 
+reproduced in the docs. You can interact with these using binder:
 
 [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/tomneep/blue/master?filepath=docs%2Fnotebooks)
