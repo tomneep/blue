@@ -24,6 +24,7 @@ documented below but :py:mod:`blue` is best demonstrated by example.
    notebooks/ATLAS-CONF-2014-054
    notebooks/arxiv_1709.05327
    notebooks/ATLAS-CONF-2013-102
+   notebooks/ATLAS-CONF-2017-071
 
 .. todo::
    Add notebooks for more combinations
