@@ -4,6 +4,8 @@ BLUE: Best Linear Unbiased Estimator
 from collections import namedtuple
 import numpy as np
 
+__version__ = '0.0.1'
+
 
 class Blue(object):
     """The Blue class
