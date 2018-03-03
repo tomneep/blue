@@ -17,8 +17,9 @@ class Blue(object):
     :param correlations: A mapping of uncertainty
          names to correlations. Correlations can be either single numbers, in
          which case an appropriately shaped correlation matrix filled with that
-         value will be created (with all diagonal elements set to one), or a
-         two-dimensional numpy array.
+         value will be created (with all diagonal elements set to one),
+         a one-dimensional array-like, containing the off-diagonal elements
+         of the correlation matrix, or a two-dimensional array.
     :param observables: None or a dictionary mapping observables to
          measurements. For a single observable leave as (or set to) None.
     :raises IndexError: The results column will be
@@ -256,16 +257,39 @@ class Blue(object):
         return Blue(sub_df, new_correlations)
 
     def _to_array(self, in_array):
-        out = np.array(in_array)
+        in_array = np.array(in_array)
         out_len = len(self.data)
         out_shape = (out_len, out_len)
-        if out.ndim == 0:
-            out = np.full(out_shape, out)
+
+        if in_array.ndim == 0:
+            out = np.full(out_shape, in_array)
             np.fill_diagonal(out, 1.0)
-        if out.shape != out_shape:
+        elif in_array.ndim == 1:
+            tri_indices = np.triu_indices(out_len, k=1)
+            if len(in_array) == len(tri_indices[0]):
+                out = np.ones(out_shape)
+                out[tri_indices] = in_array
+                out.T[tri_indices] = in_array
+            else:
+                raise ValueError(
+                    'One dim. correlations supplied which are taken to be the'
+                    'upper triangle elements of the correlations matrix. '
+                    f'There should be {len(tri_indices[0])} elements, '
+                    f'you have supplied {len(in_array)}'
+                )
+        elif in_array.ndim == 2:
+            if in_array.shape == out_shape:
+                out = in_array
+            else:
+                raise ValueError(
+                    'Correlation matrix is not the correct shape. '
+                    f'(should be {out_shape}, is {in_array.shape})')
+        else:
             raise ValueError(
-                'Correlation matrix is not the correct shape. '
-                f'(should be {out_shape}, is {out.shape})')
+                f"{in_array.ndim}D correlation matrix doesn't make sense."
+                'Input correlations can be 0, 1 or 2D.'
+            )
+
         return out
 
     @classmethod
