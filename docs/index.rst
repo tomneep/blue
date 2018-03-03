@@ -29,6 +29,11 @@ documented below but :py:mod:`blue` is best demonstrated by example.
 .. todo::
    Add notebooks for more combinations
 
+.. toctree::
+   :caption: Tips & Tricks
+
+   notebooks/latex_tabling
+
 
 The Blue class
 ==============
