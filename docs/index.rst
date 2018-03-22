@@ -30,6 +30,7 @@ documented below but :py:mod:`blue` is best demonstrated by example.
    Add notebooks for more combinations
 
 .. toctree::
+   :maxdepth: 1
    :caption: Tips & Tricks
 
    notebooks/latex_tabling
