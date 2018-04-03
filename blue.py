@@ -10,25 +10,34 @@ __version__ = '0.0.1'
 class Blue(object):
     """The Blue class
 
-    :param data: A pandas dataframe containing the results and uncertainties
-         per experiment. The data should be organised in a "tidy" format with
-         one row per measurement. All uncertainties should be given as
-         absolute uncertainties.
-    :param correlations: A mapping of uncertainty
-         names to correlations. Correlations can be either single numbers, in
-         which case an appropriately shaped correlation matrix filled with that
-         value will be created (with all diagonal elements set to one),
-         a one-dimensional array-like, containing the off-diagonal elements
-         of the correlation matrix, or a two-dimensional array.
-    :param observables: None or a dictionary mapping observables to
-         measurements. For a single observable leave as (or set to) None.
-    :raises IndexError: The results column will be
-         automatically inferred as
-         the only column in the data that is not in the `correlations` mapping.
-         If this can not be inferred e.g. because the number of keys in the
-         mapping is not equal to the number of columns in the data minus one
-         an IndexError will be raised.
+    Parameters
+    ----------
+    data:
+        A pandas dataframe containing the results and uncertainties
+        per experiment. The data should be organised in a "tidy" format with
+        one row per measurement. All uncertainties should be given as
+        absolute uncertainties.
+    correlations:
+        A mapping of uncertainty
+        names to correlations. Correlations can be either single numbers, in
+        which case an appropriately shaped correlation matrix filled with that
+        value will be created (with all diagonal elements set to one),
+        a one-dimensional array-like, containing the off-diagonal elements
+        of the correlation matrix, or a two-dimensional array.
+    observables:
+        None or a dictionary mapping observables to
+        measurements. For a single observable leave as (or set to) None.
+
+    Raises
+    -------
+    IndexError:
+        The results column will be automatically inferred as
+        the only column in the data that is not in the `correlations` mapping.
+        If this can not be inferred e.g. because the number of keys in the
+        mapping is not equal to the number of columns in the data minus one
+        an IndexError will be raised.
     """
+
     _BlueResult = namedtuple(
         'BlueResult', ['weights', 'covariance_matrices', 'combined_covariance']
     )
@@ -243,8 +252,15 @@ class Blue(object):
         subset of all the measurements without having to redefine correlation
         matrices.
 
-        :param list item: A list of measurements
-        :return: A new instance of the :py:class:`Blue` class
+        Parameters
+        ----------
+        item : list
+            A list of measurements
+
+        Returns
+        -------
+        :class:`Blue`:
+            A new instance of the :py:class:`Blue` class
             using a subset of measurements as defined by `item`.
 
         """
@@ -301,14 +317,30 @@ class Blue(object):
         first two parameters of this method are the same as those used to
         initialise the standard :py:class:`Blue` class.
 
-        :param data: See :py:class:`Blue`
-        :param correlations: See :py:class:`Blue`
-        :param fixed: Uncertainty names that should not be scaled when
-             applying the iterative procedure.
-             These are typically statistical uncertainties.
-        :param cutoff: The point at which to stop iterating and return.
-        :param max_iters: When to stop iterating and give up.
-        :raises RuntimeError: if `max_iters` is reached.
+        Parameters
+        ----------
+        data:
+            See :py:class:`Blue`
+        correlations:
+            See :py:class:`Blue`
+        fixed:
+            Uncertainty names that should not be scaled when
+            applying the iterative procedure.
+            These are typically statistical uncertainties.
+        cutoff: float
+            The point at which to stop iterating and return.
+        max_iters: int
+            When to stop iterating and give up.
+
+        Returns
+        -------
+        :class:`Blue`
+            An instance of the Blue class constructed iteratively
+
+        Raises
+        ------
+        RuntimeError:
+            if `max_iters` is reached.
 
         """
         it_data = data.copy()
