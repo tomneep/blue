@@ -158,8 +158,10 @@ class Blue(object):
 
     @property
     def combined_result(self):
-        """The combined result. A single number if only a single observable, a
-        dictionary of observables and results if more than one observable.
+        """The combined result.
+
+        A single number if only a single observable, a dictionary of
+        observables and results if more than one observable.
         """
         w = self.weights
         if w.ndim == 1:
@@ -194,11 +196,13 @@ class Blue(object):
 
     @property
     def total_covariance(self):
-        """The total covariance matrix. This is constructed from the input data and
-        correlations passed into the class constructor. For each source of
-        uncertainty, a covariance matrix is constructed such that :math:`Cov(i,
-        j) = \\sigma_i \\sigma_j \\rho_{ij}`. The total covariance is then
-        obtained by adding all the covariance matrices element wise.
+        """The total covariance matrix.
+
+        This is constructed from the input data and correlations passed into
+        the class constructor. For each source of uncertainty, a covariance
+        matrix is constructed such that :math:`Cov(i, j) = \\sigma_i \\sigma_j
+        \\rho_{ij}`. The total covariance is then obtained by adding all the
+        covariance matrices element wise.
         """
         covs = self._run_calculation().covariance_matrices
         return np.stack(covs.values()).sum(axis=0)
@@ -212,17 +216,20 @@ class Blue(object):
 
     @property
     def combined_covariance(self):
-        """The covariance matrix of the combination. In the case of a single observable
-        this will just be a single number but is always returned as a
-        two-dimensional numpy array.
+        """The covariance matrix of the combination.
+
+        In the case of a single observable this will just be a single number
+        but is always returned as a two-dimensional numpy array.
         """
         return self._run_calculation().combined_covariance
 
     @property
     def observable_correlations(self):
-        """The correlation between multiple observables. This property is only really
-        useful when performing the blue combination with multiple observables
-        as the correlation with an observable with itself is just one.
+        """The correlation between multiple observables.
+
+        This property is only really useful when performing the blue
+        combination with multiple observables as the correlation with an
+        observable with itself is just one.
         """
         comb_cov = self._run_calculation().combined_covariance
         diag = np.atleast_2d(comb_cov.diagonal())
@@ -231,8 +238,9 @@ class Blue(object):
     @property
     def chi2_ndf(self):
         """The :math:`\\chi^2` and number-of-degrees-of-freedom (NDF) of the
-        combination. One can obtain the p-value of the combination using
-        scipy::
+        combination.
+
+        One can obtain the p-value of the combination using scipy::
 
             from scipy.stats import chi2
 
@@ -247,8 +255,9 @@ class Blue(object):
 
     def __getitem__(self, item):
         """Make a new instance of the :py:class:`Blue` class using only a
-        subset of
-        measurements. This makes it easy to perform a combination using a
+        subset of measurements.
+
+        This makes it easy to perform a combination using a
         subset of all the measurements without having to redefine correlation
         matrices.
 
@@ -311,7 +320,8 @@ class Blue(object):
     @classmethod
     def iterative(cls, data, correlations, fixed=None, cutoff=0.01,
                   max_iters=200):
-        """Construct an instance of the Blue class iteratively, updating uncertainties
+        """Construct an instance of the Blue class iteratively,
+        updating uncertainties
         based on the combined result and repeating the combination until the
         change between successive iterations is less that cutoff * 100 %. The
         first two parameters of this method are the same as those used to
