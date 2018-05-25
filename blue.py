@@ -297,7 +297,7 @@ class Blue(object):
                 out.T[tri_indices] = in_array
             else:
                 raise ValueError(
-                    'One dim. correlations supplied which are taken to be the'
+                    'One dim. correlations supplied which are taken to be the '
                     'upper triangle elements of the correlations matrix. '
                     f'There should be {len(tri_indices[0])} elements, '
                     f'you have supplied {len(in_array)}'
@@ -311,7 +311,7 @@ class Blue(object):
                     f'(should be {out_shape}, is {in_array.shape})')
         else:
             raise ValueError(
-                f"{in_array.ndim}D correlation matrix doesn't make sense."
+                f"{in_array.ndim}D correlation matrix doesn't make sense. "
                 'Input correlations can be 0, 1 or 2D.'
             )
 
