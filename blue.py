@@ -4,7 +4,7 @@ BLUE: Best Linear Unbiased Estimator
 from collections import namedtuple
 import numpy as np
 
-__version__ = '0.0.1'
+__version__ = "0.0.1"
 
 
 class Blue(object):
@@ -39,20 +39,19 @@ class Blue(object):
     """
 
     _BlueResult = namedtuple(
-        'BlueResult', ['weights', 'covariance_matrices', 'combined_covariance']
+        "BlueResult", ["weights", "covariance_matrices", "combined_covariance"]
     )
 
     def __init__(self, data, correlations, observables=None):
         self.data = data
-        self.correlations = {i: self._to_array(j)
-                             for i, j in correlations.items()}
+        self.correlations = {i: self._to_array(j) for i, j in correlations.items()}
         self.results_column = self._get_results_col()
         self.observables = observables
 
     def _get_results_col(self):
         no_corr_columns = self.data.columns ^ self.correlations
         if len(no_corr_columns) != 1:
-            raise IndexError('Results column can not be inferred!')
+            raise IndexError("Results column can not be inferred!")
         return no_corr_columns[0]
 
     def _run_calculation(self):
@@ -101,8 +100,7 @@ class Blue(object):
     def _fisher_information(self):
         if self.observables is not None:
             raise NotImplementedError(
-                'Information weights are only available '
-                'for a single observable'
+                "Information weights are only available " "for a single observable"
             )
         return 1 / self._run_calculation().combined_covariance.squeeze()
 
@@ -186,12 +184,11 @@ class Blue(object):
     def pulls(self):
         """Get the pulls"""
         if self.observables is not None:
-            raise NotImplementedError(
-                'Pulls only valid for a single observable'
-            )
+            raise NotImplementedError("Pulls only valid for a single observable")
         diff_result = self.data[self.results_column] - self.combined_result
-        diff_variance = np.sqrt(self.total_covariance.diagonal()
-                                - (1 / self._fisher_information))
+        diff_variance = np.sqrt(
+            self.total_covariance.diagonal() - (1 / self._fisher_information)
+        )
         return diff_result / diff_variance
 
     @property
@@ -276,8 +273,9 @@ class Blue(object):
         num_loc = [self.data.index.get_loc(i) for i in item]
         sub_df = self.data.loc[item]
 
-        new_correlations = {i: j[num_loc, :][:, num_loc]
-                            for i, j in self.correlations.items()}
+        new_correlations = {
+            i: j[num_loc, :][:, num_loc] for i, j in self.correlations.items()
+        }
 
         return Blue(sub_df, new_correlations)
 
@@ -297,29 +295,29 @@ class Blue(object):
                 out.T[tri_indices] = in_array
             else:
                 raise ValueError(
-                    'One dim. correlations supplied which are taken to be the '
-                    'upper triangle elements of the correlations matrix. '
-                    f'There should be {len(tri_indices[0])} elements, '
-                    f'you have supplied {len(in_array)}'
+                    "One dim. correlations supplied which are taken to be the "
+                    "upper triangle elements of the correlations matrix. "
+                    f"There should be {len(tri_indices[0])} elements, "
+                    f"you have supplied {len(in_array)}"
                 )
         elif in_array.ndim == 2:
             if in_array.shape == out_shape:
                 out = in_array
             else:
                 raise ValueError(
-                    'Correlation matrix is not the correct shape. '
-                    f'(should be {out_shape}, is {in_array.shape})')
+                    "Correlation matrix is not the correct shape. "
+                    f"(should be {out_shape}, is {in_array.shape})"
+                )
         else:
             raise ValueError(
                 f"{in_array.ndim}D correlation matrix doesn't make sense. "
-                'Input correlations can be 0, 1 or 2D.'
+                "Input correlations can be 0, 1 or 2D."
             )
 
         return out
 
     @classmethod
-    def iterative(cls, data, correlations, fixed=None, cutoff=0.01,
-                  max_iters=200):
+    def iterative(cls, data, correlations, fixed=None, cutoff=0.01, max_iters=200):
         """Construct an instance of the Blue class iteratively,
         updating uncertainties
         based on the combined result and repeating the combination until the
@@ -363,15 +361,16 @@ class Blue(object):
                 break
             prev_result = result
             new_uncerts = (
-                (data.drop(blue.results_column, axis=1).T
-                 / it_data[blue.results_column].values) * result
+                (
+                    data.drop(blue.results_column, axis=1).T
+                    / it_data[blue.results_column].values
+                )
+                * result
             ).T
             if fixed is not None:
                 new_uncerts = new_uncerts.drop(fixed, axis=1)
             it_data.update(new_uncerts)
 
         else:
-            raise RuntimeError(
-                f'Failed to converge after {max_iters} iterations!'
-            )
+            raise RuntimeError(f"Failed to converge after {max_iters} iterations!")
         return blue
