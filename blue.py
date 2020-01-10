@@ -63,7 +63,7 @@ class Blue(object):
         for i in self.data.drop(self.results_column, axis=1).columns:
             x = np.array(self.data[i].values, ndmin=2)
             covariance_matrices[i] = (x * x.T) * self.correlations[i]
-        total_covariance = np.stack(covariance_matrices.values()).sum(axis=0)
+        total_covariance = np.stack(list(covariance_matrices.values())).sum(axis=0)
 
         total_inv_covariance = np.linalg.inv(total_covariance)
 
@@ -202,7 +202,7 @@ class Blue(object):
         covariance matrices element wise.
         """
         covs = self._run_calculation().covariance_matrices
-        return np.stack(covs.values()).sum(axis=0)
+        return np.stack(list(covs.values())).sum(axis=0)
 
     @property
     def total_correlations(self):
