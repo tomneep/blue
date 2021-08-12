@@ -9,6 +9,8 @@ language features: the matrix multiplication operator `@` and f-strings.
 :py:mod:`blue` doesn't use f-strings extensively and so could be made to work
 with Python 3.5, but hey, why use 3.5 when you can use 3.6!
 
+The code is available on `github <https://github.com/tomneep/blue>`_.
+
 Using :py:mod:`blue` to get a combined result is straight-forward, the
 difficult part is making you measurements and assigning correlations between the
 uncertainties of those measurements. Once this has been achieved one can
@@ -25,6 +27,7 @@ documented below but :py:mod:`blue` is best demonstrated by example.
    notebooks/arxiv_1709.05327
    notebooks/ATLAS-CONF-2013-102
    notebooks/ATLAS-CONF-2017-071
+   notebooks/JHEP_08_2020_51
 
 .. todo::
    Add notebooks for more combinations
