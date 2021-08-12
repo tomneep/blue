@@ -4,7 +4,7 @@ BLUE: Best Linear Unbiased Estimator
 from collections import namedtuple
 import numpy as np
 
-__version__ = "0.0.1"
+__version__ = "0.0.2"
 
 
 class Blue(object):
@@ -49,7 +49,7 @@ class Blue(object):
         self.observables = observables
 
     def _get_results_col(self):
-        no_corr_columns = self.data.columns ^ self.correlations
+        no_corr_columns = self.data.columns.symmetric_difference(self.correlations)
         if len(no_corr_columns) != 1:
             raise IndexError("Results column can not be inferred!")
         return no_corr_columns[0]
@@ -100,7 +100,7 @@ class Blue(object):
     def _fisher_information(self):
         if self.observables is not None:
             raise NotImplementedError(
-                "Information weights are only available " "for a single observable"
+                "Information weights are only available for a single observable"
             )
         return 1 / self._run_calculation().combined_covariance.squeeze()
 
@@ -244,11 +244,22 @@ class Blue(object):
             blue = Blue(data, correlations)
             p_value = chi2.sf(*blue.chi2_ndf)
         """
+        diff = self._measured_diff()
+        nobs = len(self.observables) if self.observables else 1
+        ndf = len(self.data) - nobs
+        return diff.T @ np.linalg.inv(self.total_covariance) @ diff, ndf
+
+    def _measured_diff(self):
+        """The difference between the combined result and inputs"""
         combined_result = self.combined_result
-        total_covariance = self.total_covariance
-        diff = self.data[self.results_column].values - combined_result
-        ndf = len(self.data) - 1
-        return diff.T @ np.linalg.inv(total_covariance) @ diff, ndf
+        diff = self.data[self.results_column].copy()
+
+        if not self.observables:
+            return diff - combined_result
+
+        for i, j in self.observables.items():
+            diff[j] -= combined_result[i]
+        return diff
 
     def __getitem__(self, item):
         """Make a new instance of the :py:class:`Blue` class using only a
