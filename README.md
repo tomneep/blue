@@ -7,6 +7,8 @@ This code has not been used for any scientific publications so far, but several
 existing combinations are repeated as examples in the documentation as jupyter
 notebooks.
 
+Documentation and examples are available [here](https://tneep.web.cern.ch/blue/).
+
 ## Examples
 
 Previous analyses that have used the BLUE method (but not this code) are
